@@ -1,41 +1,70 @@
-import os
-import base64
-import asyncio
 from telethon import TelegramClient
+import asyncio
+import os
 
-# 1. GitHub Secret ထဲက Session ကို ပြန်ဖတ်ပြီး ဖိုင်ထုတ်ခြင်း
+API_ID = 39359433                         
+API_HASH = '34e0e459bb9dd046a0ed4db3311ea5b8'          
+
+# Bro ရဲ့ Channel ID တွေကို ဒီမှာ ထည့်ထားပြီးပါပြီ
+MYANMAR_TARGETS = [-1003157381562, -1003717273116] 
+FOREIGN_TARGETS = [-1003828762835]
+
+MY_MYANMAR_CHANNEL = '@abodlppdi'
+MY_FOREIGN_CHANNEL = '@ninkopint'
+HISTORY_FILE = 'history.txt'
+
+def get_history():
+    if not os.path.exists(HISTORY_FILE): return set()
+    with open(HISTORY_FILE, 'r') as f: 
+        return set(line.strip() for line in f if line.strip())
+
+def save_history(message_id):
+    with open(HISTORY_FILE, 'a') as f: 
+        f.write(f"{message_id}\n")
+
+# Session String ကို GitHub Secret ကနေ ပြန်ဖတ်ဖို့ Code ထည့်ပေးထားပါတယ်
+import base64
 session_str = os.environ.get('SESSION_STRING')
 if session_str:
-    session_data = base64.b64decode(session_str)
     with open('session_userbot.session', 'wb') as f:
-        f.write(session_data)
+        f.write(base64.b64decode(session_str))
 
-# 2. Telegram နဲ့ ချိတ်ဆက်ဖို့ Config
-API_ID = 39359433
-API_HASH = '34e0e459bb9dd046a0ed4db3311ea5b8'
-
-# timeout=60 ဆိုတာ ချိတ်ဆက်မှု နှေးရင် ချက်ချင်းမပြတ်အောင် ကာကွယ်ပေးတာပါ
-client = TelegramClient('session_userbot', API_ID, API_HASH, timeout=60)
+client = TelegramClient('session_userbot', API_ID, API_HASH)
 
 async def main():
-    # client.start() က ဘာလုပ်ပေးလဲ?
-    # - Bro ရဲ့ Session ဖိုင်ကို ဖတ်မယ်
-    # - Telegram ဆာဗာကို "ဒီအကောင့်က ကျွန်တော်ပါ" လို့ အတည်ပြုမယ်
-    # - အောင်မြင်ရင် Data တွေ လှမ်းယူဖို့ လမ်းကြောင်းပွင့်သွားမယ်
-    print("Telegram နဲ့ ချိတ်ဆက်နေပါပြီ...")
     await client.start()
-    print("ချိတ်ဆက်မှု အောင်မြင်ပါပြီ! ဘော့တ် စတင်ပြီ...")
-
-    # ဒီနေရာမှာ တင်မယ့် Logic တွေကို ဆက်ထည့်ပါ
-    # ဥပမာ - channel တစ်ခုကနေ နောက်တစ်ခုကို Forward လုပ်တာမျိုး
+    print("Bot စတင်ပြီ...")
     
-    # ဘော့တ်ကို အမြဲ အလုပ်လုပ်နေအောင် ထားတာပါ
-    await client.run_until_disconnected()
+    while True:
+        # 1. မြန်မာကားများ စစ်မယ်
+        for target in MYANMAR_TARGETS:
+            history = get_history()
+            async for message in client.iter_messages(target, limit=1):
+                if message.media and message.video and str(message.id) not in history:
+                    try:
+                        await client.send_file(MY_MYANMAR_CHANNEL, file=message.media, caption="🇲🇲 မြန်မာကား", silent=True)
+                        save_history(message.id)
+                        print(f"✅ မြန်မာကားတင်ပြီး: {message.id}")
+                        await asyncio.sleep(45) 
+                    except Exception as e:
+                        print(f"Error: {e}")
+                        await asyncio.sleep(60)
+
+        # 2. နိုင်ငံခြားကားများ စစ်မယ်
+        for target in FOREIGN_TARGETS:
+            history = get_history()
+            async for message in client.iter_messages(target, limit=1):
+                if message.media and message.video and str(message.id) not in history:
+                    try:
+                        await client.send_file(MY_FOREIGN_CHANNEL, file=message.media, caption="🍿 နိုင်ငံခြားကား", silent=True)
+                        save_history(message.id)
+                        print(f"✅ နိုင်ငံခြားကားတင်ပြီး: {message.id}")
+                        await asyncio.sleep(45)
+                    except Exception as e:
+                        print(f"Error: {e}")
+                        await asyncio.sleep(60)
+        
+        await asyncio.sleep(60)
 
 if __name__ == '__main__':
-    # Network ပြဿနာရှိရင် ၃ ကြိမ်အထိ ပြန်ကြိုးစားဖို့ Error handling ထည့်ထားပါတယ်
-    try:
-        asyncio.run(main())
-    except Exception as e:
-        print(f"Error တက်လို့ ထွက်လိုက်ပါပြီ: {e}")
-        
+    asyncio.run(main())
