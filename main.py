@@ -8,48 +8,54 @@ API_HASH = '34e0e459bb9dd046a0ed4db3311ea5b8'
 
 MYANMAR_TARGETS = [-1003157381562, -1003717273116] 
 FOREIGN_TARGETS = [-1003828762835]
-
-# Channel username တွေအစား ID အရှည်ကြီးကို သုံးရင် ပိုသေချာပါတယ်
-MY_MYANMAR_CHANNEL = -1002241696035 # @abodlppdi ရဲ့ ID (Telegram မှာ စစ်ကြည့်ပါ)
-MY_FOREIGN_CHANNEL = -1002012345678 # @ninkopint ရဲ့ ID
-
+MY_MYANMAR_CHANNEL = '@abodlppdi'
+MY_FOREIGN_CHANNEL = '@ninkopint'
 HISTORY_FILE = 'history.txt'
 
-# (Session ဖတ်တဲ့ Code တွေ ဒီနေရာမှာ ထည့်ပါ)
+# Session ဖတ်ခြင်း
+session_str = os.environ.get('SESSION_STRING')
+if session_str:
+    with open('session_userbot.session', 'wb') as f:
+        f.write(base64.b64decode(session_str))
+
+def get_history():
+    if not os.path.exists(HISTORY_FILE): return set()
+    with open(HISTORY_FILE, 'r') as f: 
+        return set(line.strip() for line in f if line.strip())
+
+def save_history(message_id):
+    with open(HISTORY_FILE, 'a') as f: 
+        f.write(f"{message_id}\n")
 
 client = TelegramClient('session_userbot', API_ID, API_HASH)
 
 async def main():
     await client.start()
-    print("Bot စတင်ပြီ...")
     
-    while True:
-        # 1. မြန်မာကားများ စစ်မယ်
-        for target in MYANMAR_TARGETS:
-            async for message in client.iter_messages(target, limit=5):
-                # Video ဖြစ်ရမယ် + 60 စက္ကန့် (၁ မိနစ်) ကျော်ရမယ်
-                if message.video and message.video.duration > 60:
-                    if str(message.id) not in get_history():
-                        try:
-                            await client.send_file(MY_MYANMAR_CHANNEL, file=message.media, caption="🇲🇲 မြန်မာကား (၁ မိနစ်ကျော်)")
-                            save_history(message.id)
-                            print(f"✅ တင်ပြီးပြီ: {message.id}")
-                            await asyncio.sleep(10)
-                        except Exception as e:
-                            print(f"Error: {e}")
+    # 1. မြန်မာကား စစ်မယ်
+    for target in MYANMAR_TARGETS:
+        async for message in client.iter_messages(target, limit=10):
+            if message.video and message.video.duration > 60:
+                if str(message.id) not in get_history():
+                    try:
+                        await client.send_file(MY_MYANMAR_CHANNEL, message.media, caption="🇲🇲 မြန်မာကား")
+                        save_history(message.id)
+                        print(f"✅ မြန်မာကားတင်ပြီး: {message.id}")
+                        await asyncio.sleep(5)
+                    except: pass
 
-        # 2. နိုင်ငံခြားကားများ စစ်မယ်
-        for target in FOREIGN_TARGETS:
-            async for message in client.iter_messages(target, limit=5):
-                if message.video and message.video.duration > 60:
-                    if str(message.id) not in get_history():
-                        try:
-                            await client.send_file(MY_FOREIGN_CHANNEL, file=message.media, caption="🍿 နိုင်ငံခြားကား (၁ မိနစ်ကျော်)")
-                            save_history(message.id)
-                            print(f"✅ တင်ပြီးပြီ: {message.id}")
-                            await asyncio.sleep(10)
-                        except Exception as e:
-                            print(f"Error: {e}")
-        
-        await asyncio.sleep(60)
+    # 2. နိုင်ငံခြားကား စစ်မယ်
+    for target in FOREIGN_TARGETS:
+        async for message in client.iter_messages(target, limit=10):
+            if message.video and message.video.duration > 60:
+                if str(message.id) not in get_history():
+                    try:
+                        await client.send_file(MY_FOREIGN_CHANNEL, message.media, caption="🍿 နိုင်ငံခြားကား")
+                        save_history(message.id)
+                        print(f"✅ နိုင်ငံခြားကားတင်ပြီး: {message.id}")
+                        await asyncio.sleep(5)
+                    except: pass
 
+if __name__ == '__main__':
+    asyncio.run(main())
+    
