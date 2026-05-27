@@ -1,3 +1,20 @@
+name: Telegram Bot Runner
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      - name: Install dependencies
+        run: pip install telethon
       - name: Run Bot
         env:
           SESSION_STRING: ${{ secrets.SESSION_STRING }}
