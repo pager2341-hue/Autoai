@@ -18,8 +18,5 @@ jobs:
       - name: Run Bot
         env:
           SESSION_STRING: ${{ secrets.SESSION_STRING }}
-        run: |
-          for i in {1..3}; do
-            python main.py && break || sleep 10
-          done
-          
+        run: python main.py
+        
