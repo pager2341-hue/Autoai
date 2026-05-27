@@ -10,7 +10,6 @@ FOREIGN_TARGETS = [-1003828762835]
 
 MY_MYANMAR_CHANNEL = '@abodlppdi'
 MY_FOREIGN_CHANNEL = '@ninkopint'
-
 HISTORY_FILE = 'history.txt'
 
 def get_history():
@@ -33,12 +32,13 @@ async def main():
         for target in MYANMAR_TARGETS:
             history = get_history()
             async for message in client.iter_messages(target, limit=1):
+                # ဗီဒီယို ဟုတ်/မဟုတ် စစ်ခြင်း (ပုံများကို အလိုလို ကျော်သွားမည်)
                 if message.media and message.video and str(message.id) not in history:
                     try:
                         await client.send_file(MY_MYANMAR_CHANNEL, file=message.media, caption="🇲🇲 မြန်မာကား", silent=True)
                         save_history(message.id)
                         print(f"✅ မြန်မာကားတင်ပြီး: {message.id}")
-                        await asyncio.sleep(40) 
+                        await asyncio.sleep(45) # ပိုလုံခြုံအောင် ၄၅ စက္ကန့်နား
                     except Exception as e:
                         print(f"Error: {e}")
                         await asyncio.sleep(60)
@@ -52,13 +52,13 @@ async def main():
                         await client.send_file(MY_FOREIGN_CHANNEL, file=message.media, caption="🍿 နိုင်ငံခြားကား", silent=True)
                         save_history(message.id)
                         print(f"✅ နိုင်ငံခြားကားတင်ပြီး: {message.id}")
-                        await asyncio.sleep(40)
+                        await asyncio.sleep(45)
                     except Exception as e:
                         print(f"Error: {e}")
                         await asyncio.sleep(60)
         
-        await asyncio.sleep(30)
+        await asyncio.sleep(60) # တစ်ပတ်လည်ပြီးတိုင်း ၆၀ စက္ကန့်နား
 
 if __name__ == '__main__':
     asyncio.run(main())
-                      
+    
